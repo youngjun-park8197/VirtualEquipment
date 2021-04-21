@@ -37,8 +37,8 @@ namespace VirtualEquip
             tbEqAtmos.Text      = inif.GetString("Environment", "EqAtmos", "00001");
             tbEqTotal.Text      = inif.GetString("Environment", "EqTotal", "00001");
 
-            dateTimeBegin.Value = new DateTime(long.Parse(inif.GetString("Operation", "StartTime", "0")));
-            dateTimeEnd.Value = new DateTime(long.Parse(inif.GetString("Operation", "StopTime", "0")));
+            dtBegin.Value = new DateTime(long.Parse(inif.GetString("Operation", "StartTime", "0")));
+            dtEnd.Value = new DateTime(long.Parse(inif.GetString("Operation", "StopTime", "0")));
             tbEqInterval.Text = inif.GetString("Operation", "Interval", "5");
 
             int x1, x2, y1, y2;
@@ -73,22 +73,28 @@ namespace VirtualEquip
             inif.SetString("Environment", "EqAtmos",    tbEqAtmos.Text);
             inif.SetString("Environment", "EqTotal",    tbEqTotal.Text);
 
-            inif.SetString("Operation", "StartTime", dateTimeBegin.Value.Ticks.ToString());
-            inif.SetString("Operation", "StopTime", dateTimeEnd.Value.Ticks.ToString());
-            inif.SetString("Operation", "Interval", tbEqInterval.Text);
+            inif.SetString("Operation", "StartDate",    dtBegin.Value.Ticks.ToString());
+            inif.SetString("Operation", "StopDate",     dtEnd.Value.Ticks.ToString());
+            inif.SetString("Operation", "StartTime",    dtBeginClock.Value.Ticks.ToString());
+            inif.SetString("Operation", "StopTime",     dtEndClock.Value.Ticks.ToString());
+            inif.SetString("Operation", "Interval",     tbEqInterval.Text);
 
-            inif.SetString("Server", "IP", sbLabel1.Text);
-            inif.SetString("Server", "Port", sbLabel2.Text);
+            inif.SetString("Server", "IP",              sbLabel1.Text);
+            inif.SetString("Server", "Port",            sbLabel2.Text);
 
-            inif.SetString("Form", "LocationX", )
+            inif.SetString("Form", "LocationX",         $"{Location.X}");
+            inif.SetString("Form", "LocationY",         $"{Location.Y}");
+            inif.SetString("Form", "SizeX",             $"{Size.Width}");
+            inif.SetString("Form", "SizeY",             $"{Size.Height}");
+
+            if (threadRead != null) threadRead.Abort();
         }
+
 
         Socket sock = null;
         Thread threadRead = null;
 
-
         delegate void cbAddText(string str);
-
         void AddText(string str)
         {
             if(tbMonitor.InvokeRequired)
@@ -96,22 +102,10 @@ namespace VirtualEquip
                 cbAddText cb = new cbAddText(AddText);
                 Invoke(cb, new object[] { str });
             }
-            tbMonitor.AppendText(str);
-        }
-        
-        bool IsAlive(Socket ss)
-        {
-            if (ss == null) return false;
-            if (!ss.Connected) return false;
-
-            if(ss.Poll(1000, SelectMode.SelectRead) && ss.Available == 0) return false;
-
-            try
+            else
             {
-                ss.Send(new byte[1], 0, SocketFlags.OutOfBand);
-                return true;
+                tbMonitor.AppendText(str);
             }
-            catch { return false; }
         }
 
 
@@ -121,7 +115,7 @@ namespace VirtualEquip
             while(true)
             {
                 lsock = sock;
-                if (IsAlive(lsock) && lsock.Available > 0)
+                if (jslib.IsAlive(lsock) && lsock.Available > 0)
                 {
                     byte[] bArr = new byte[lsock.Available]; // 읽어들여야하는 만큼 배열 생성(필요 버퍼 확보)
                     lsock.Receive(bArr);
@@ -155,6 +149,13 @@ namespace VirtualEquip
             }
         }
 
+        private void mnuStop_Click(object sender, EventArgs e)
+        {
+            timer1.Stop();
+            if(threadRead != null) { threadRead.Abort(); threadRead = null; }
+            if(sock != null) { sock.Close(); sock = null; }
+        }
+
 
         private void sbLabel1_DoubleClick(object sender, EventArgs e)
         {
@@ -168,24 +169,79 @@ namespace VirtualEquip
             if (str != "") sbLabel2.Text = str;
         }
 
+
+        char STX = '\u0002';
+        char ETX = '\u0003';
+        /*
+            int n = 123;
+            string ss = "123";  // string -> int.parse
+            string str = $"[{n}]"; // -> [123]
+            string str = $"[{n,6}]"; // -> [___123]
+            string str = $"[{n,-6}]"; // -> [123___]
+            string str = $"[{n,6:D5}]"; // -> [_00123]
+            
+            < 텍스트명>        : <문자열타입(자릿수)>
+            tbEqCode.Text      : string(5)
+            tbEqModel.Text     : string(6)
+            tbEqLineNum.Text   : string(5)
+            tbEqBattery.Text   : string(5)
+            tbEqOperState.Text : int(1)
+            tbEqOperCount.Text : int(5)
+            tbEqTemp.Text      : int(4)
+            tbEqHumid.Text     : int(4)
+            tbEqWind.Text      : int(4)
+            tbEqOzon.Text      : int(4)
+            tbEqAtmos.Text     : int(1)
+            tbEqTotal.Text     : int(4)
+            총 48 자릿수
+        */
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             timer1.Stop();
 
-            string str = tbEqCode.Text + tbEqModel.Text + tbEqLineNum.Text + tbEqBattery.Text + tbEqOperState.Text
-                       + tbEqTemp.Text + tbEqHumid.Text + tbEqWind.Text + tbEqOzon.Text + tbEqAtmos.Text + tbEqTotal.Text;
-            byte[] ba = Encoding.Default.GetBytes(str);
-
-            if(jslib.IsAlive(sock))
+            if(CheckInTime())
             {
-                sock.Send(ba);
-                tbEqOperCount.Text = $"{int.Parse(tbEqOperCount.Text) + +1}";
-
-                // 패킷 구성 : 패킷의 전후에 [02]STX [03]ETX 문자를 덧붙임
+                SetRandomValue();
+                // Packet 구성 : 패킷의 전,후에 [02]STX [03]ETX 문자를 덧붙임
                 // send package : byte[] 로 구성
-            }
+                string str = $"{STX}";
+                str += $"{tbEqCode.Text,5}{tbEqModel.Text,6}{tbEqLineNum.Text,5}{float.Parse(tbEqBattery.Text),5:F2}";
+                str += $"{tbEqOperState.Text,1}{int.Parse(tbEqOperCount.Text):D5}";
+                str += $"{int.Parse(tbEqHumid.Text):D4}{int.Parse(tbEqHumid.Text):D4}{int.Parse(tbEqWind.Text):D4}";
+                str += $"{int.Parse(tbEqOzon.Text):D4}{int.Parse(tbEqAtmos.Text):D1}{int.Parse(tbEqTotal.Text):D4}";
+                str += $"{ETX}";
 
+                byte[] ba = Encoding.Default.GetBytes(str);
+
+                if (jslib.IsAlive(sock))
+                {
+                    sock.Send(ba);
+                    tbEqOperCount.Text = $"{int.Parse(tbEqOperCount.Text) + 1}";
+                }
+            }
             timer1.Start();
         }
+
+
+        void SetRandomValue()
+        {
+            Random r = new Random();
+            tbEqTemp.Text   = $"{r.Next(0, 99)}";
+            tbEqHumid.Text  = $"{r.Next(0, 99)}";
+            tbEqWind.Text   = $"{r.Next(0, 99)}";
+            tbEqOzon.Text   = $"{r.Next(0, 99)}";
+        }
+
+
+        bool CheckInTime()
+        {
+            DateTime dt = DateTime.Now;
+            DateTime st = dtBegin.Value.Date + dtBeginClock.Value.TimeOfDay;
+            DateTime et = dtEnd.Value.Date + dtEndClock.Value.TimeOfDay;
+
+            return st < dt && dt < et;
+        }
+
     }
 }

@@ -48,10 +48,10 @@ namespace VirtualEquip
             this.label16 = new System.Windows.Forms.Label();
             this.tbEqInterval = new System.Windows.Forms.TextBox();
             this.label15 = new System.Windows.Forms.Label();
-            this.dateTimeEnd = new System.Windows.Forms.DateTimePicker();
+            this.dtEnd = new System.Windows.Forms.DateTimePicker();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
-            this.dateTimeBegin = new System.Windows.Forms.DateTimePicker();
+            this.dtBegin = new System.Windows.Forms.DateTimePicker();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label12 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
@@ -80,6 +80,8 @@ namespace VirtualEquip
             this.tbEqCode = new System.Windows.Forms.TextBox();
             this.tbMonitor = new System.Windows.Forms.TextBox();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.dtBeginClock = new System.Windows.Forms.DateTimePicker();
+            this.dtEndClock = new System.Windows.Forms.DateTimePicker();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -126,8 +128,9 @@ namespace VirtualEquip
             // mnuStop
             // 
             this.mnuStop.Name = "mnuStop";
-            this.mnuStop.Size = new System.Drawing.Size(99, 22);
+            this.mnuStop.Size = new System.Drawing.Size(180, 22);
             this.mnuStop.Text = "Stop";
+            this.mnuStop.Click += new System.EventHandler(this.mnuStop_Click);
             // 
             // toolStripSeparator1
             // 
@@ -211,13 +214,15 @@ namespace VirtualEquip
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.dtEndClock);
+            this.groupBox3.Controls.Add(this.dtBeginClock);
             this.groupBox3.Controls.Add(this.label16);
             this.groupBox3.Controls.Add(this.tbEqInterval);
             this.groupBox3.Controls.Add(this.label15);
-            this.groupBox3.Controls.Add(this.dateTimeEnd);
+            this.groupBox3.Controls.Add(this.dtEnd);
             this.groupBox3.Controls.Add(this.label14);
             this.groupBox3.Controls.Add(this.label13);
-            this.groupBox3.Controls.Add(this.dateTimeBegin);
+            this.groupBox3.Controls.Add(this.dtBegin);
             this.groupBox3.Location = new System.Drawing.Point(5, 264);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(333, 109);
@@ -250,12 +255,12 @@ namespace VirtualEquip
             this.label15.TabIndex = 4;
             this.label15.Text = "시간간격";
             // 
-            // dateTimeEnd
+            // dtEnd
             // 
-            this.dateTimeEnd.Location = new System.Drawing.Point(66, 48);
-            this.dateTimeEnd.Name = "dateTimeEnd";
-            this.dateTimeEnd.Size = new System.Drawing.Size(200, 21);
-            this.dateTimeEnd.TabIndex = 3;
+            this.dtEnd.Location = new System.Drawing.Point(66, 48);
+            this.dtEnd.Name = "dtEnd";
+            this.dtEnd.Size = new System.Drawing.Size(100, 21);
+            this.dtEnd.TabIndex = 3;
             // 
             // label14
             // 
@@ -275,12 +280,12 @@ namespace VirtualEquip
             this.label13.TabIndex = 1;
             this.label13.Text = "시작시간";
             // 
-            // dateTimeBegin
+            // dtBegin
             // 
-            this.dateTimeBegin.Location = new System.Drawing.Point(66, 21);
-            this.dateTimeBegin.Name = "dateTimeBegin";
-            this.dateTimeBegin.Size = new System.Drawing.Size(200, 21);
-            this.dateTimeBegin.TabIndex = 0;
+            this.dtBegin.Location = new System.Drawing.Point(66, 21);
+            this.dtBegin.Name = "dtBegin";
+            this.dtBegin.Size = new System.Drawing.Size(100, 21);
+            this.dtBegin.TabIndex = 0;
             // 
             // groupBox2
             // 
@@ -531,6 +536,22 @@ namespace VirtualEquip
             // 
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // dtBeginClock
+            // 
+            this.dtBeginClock.Location = new System.Drawing.Point(174, 21);
+            this.dtBeginClock.Name = "dtBeginClock";
+            this.dtBeginClock.ShowUpDown = true;
+            this.dtBeginClock.Size = new System.Drawing.Size(130, 21);
+            this.dtBeginClock.TabIndex = 7;
+            this.dtBeginClock.Value = new System.DateTime(2021, 4, 21, 13, 46, 0, 0);
+            // 
+            // dtEndClock
+            // 
+            this.dtEndClock.Location = new System.Drawing.Point(174, 48);
+            this.dtEndClock.Name = "dtEndClock";
+            this.dtEndClock.Size = new System.Drawing.Size(130, 21);
+            this.dtEndClock.TabIndex = 8;
+            // 
             // frmEquip
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
@@ -602,10 +623,10 @@ namespace VirtualEquip
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.TextBox tbEqInterval;
         private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.DateTimePicker dateTimeEnd;
+        private System.Windows.Forms.DateTimePicker dtEnd;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.DateTimePicker dateTimeBegin;
+        private System.Windows.Forms.DateTimePicker dtBegin;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mnuStart;
         private System.Windows.Forms.ToolStripMenuItem mnuStop;
@@ -616,6 +637,8 @@ namespace VirtualEquip
         private System.Windows.Forms.ToolStripMenuItem configToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.DateTimePicker dtEndClock;
+        private System.Windows.Forms.DateTimePicker dtBeginClock;
     }
 }
 
